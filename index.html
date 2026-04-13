@@ -6,25 +6,20 @@
     <title>黑白棋 終極 AI 挑戰</title>
     <style>
         :root { --bg-color: #1e272e; --board-color: #27ae60; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; user-select: none; }
         h2 { margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center;}
         
-        /* 即時戰況計分板與計時器 */
         #score-board { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 320px; margin-bottom: 10px; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 12px; box-sizing: border-box; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
         .player-score { display: flex; align-items: center; gap: 10px; font-size: 1.8rem; font-weight: bold; }
-        .player-score.black-score { color: #ecf0f1; }
-        .player-score.white-score { color: #ecf0f1; }
         .mini-piece { width: 24px; height: 24px; border-radius: 50%; box-shadow: 1px 1px 4px rgba(0,0,0,0.6); }
         .mini-black { background: radial-gradient(circle at 30% 30%, #555, #000); }
         .mini-white { background: radial-gradient(circle at 30% 30%, #fff, #ccc); }
 
-        /* 計時器樣式 */
-        #timer-container { font-size: 1.2rem; font-weight: bold; color: #f1c40f; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; text-align: center; min-width: 65px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
-        .timer-warning { color: #e74c3c !important; animation: pulse 0.8s infinite; border-color: #e74c3c !important; background: rgba(231, 76, 60, 0.2) !important; }
+        #timer-container { font-size: 1.2rem; font-weight: bold; color: #f1c40f; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; text-align: center; min-width: 65px; border: 1px solid rgba(255,255,255,0.1); }
+        .timer-warning { color: #e74c3c !important; animation: pulse 0.8s infinite; background: rgba(231, 76, 60, 0.2) !important; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
         #status-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; padding: 8px 20px; border-radius: 20px; background: rgba(0,0,0,0.4); font-size: 1.1rem; min-width: 250px; }
-        
         .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #f1c40f; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -38,73 +33,48 @@
         .white { background: radial-gradient(circle at 30% 30%, #fff, #ccc); }
         @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 
-        /* 再挑戰一次按鈕 */
-        #restart-btn { display: none; margin-top: 20px; padding: 12px 30px; font-size: 1.2rem; font-weight: bold; color: white; background: #3498db; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: background 0.2s, transform 0.1s; }
-        #restart-btn:hover { background: #2980b9; }
-        #restart-btn:active { transform: scale(0.95); }
-
-        /* 排行榜 */
+        #restart-btn { display: none; margin-top: 20px; padding: 12px 30px; font-size: 1.2rem; font-weight: bold; color: white; background: #3498db; border: none; border-radius: 8px; cursor: pointer; }
         #leaderboard { margin-top: 20px; width: 90%; max-width: 350px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        #leaderboard h3 { margin-top: 0; text-align: center; color: #f1c40f; }
         #rank-list { padding-left: 0; list-style: none; margin: 0; }
         #rank-list li { background: rgba(0,0,0,0.2); margin-bottom: 8px; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;}
-        .score-val { font-weight: bold; color: #2ecc71; font-size: 1.2rem;}
-        .score-date { font-size: 0.8rem; color: #95a5a6; }
 
-        /* 勝利登錄表單的樣式 */
         #win-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(3px); }
-        .modal-content { background: #2c3e50; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid #f1c40f; width: 80%; max-width: 300px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-        .modal-content h3 { margin-top: 0; color: #f1c40f; font-size: 1.5rem;}
-        .modal-content p { color: #ecf0f1; font-size: 0.9rem; margin-bottom: 20px;}
-        .modal-content input { box-sizing: border-box; width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: none; font-size: 1rem; text-align: center; }
-        .btn-group { display: flex; gap: 10px; justify-content: center; }
-        .modal-content button { flex: 1; padding: 10px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; font-size: 1rem; transition: background 0.2s;}
-        .btn-submit { background: #2ecc71; color: white; }
-        .btn-submit:hover { background: #27ae60; }
-        .btn-cancel { background: #e74c3c; color: white; }
-        .btn-cancel:hover { background: #c0392b; }
+        .modal-content { background: #2c3e50; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid #f1c40f; width: 80%; max-width: 300px; }
+        .modal-content input { box-sizing: border-box; width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: none; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn-submit { background: #2ecc71; color: white; flex: 1; padding: 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #e74c3c; color: white; flex: 1; padding: 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <h2>黑白棋：終極 AI 挑戰</h2>
 
-    <!-- 即時戰況計分板與計時器 -->
     <div id="score-board">
         <div class="player-score black-score">
             <div class="mini-piece mini-black"></div>
             <span id="black-count">2</span>
         </div>
-        
-        <div id="timer-container">
-            ⏳ <span id="timer-text">30</span>
-        </div>
-        
+        <div id="timer-container">⏳ <span id="timer-text">30</span></div>
         <div class="player-score white-score">
             <span id="white-count">2</span>
             <div class="mini-piece mini-white"></div>
         </div>
     </div>
     
-    <!-- 遊戲狀態 -->
     <div id="status-container">
         <div id="loader" class="loader"></div>
         <span id="status">準備開始...</span>
     </div>
 
-    <!-- 棋盤 -->
     <div id="board"></div>
-    
-    <!-- 再挑戰一次按鈕 -->
     <button id="restart-btn" onclick="initGame()">🔄 再挑戰一次</button>
     
-    <!-- 排行榜 -->
     <div id="leaderboard">
         <h3>🏆 英雄榜 (戰勝 AI 才能上榜)</h3>
         <ul id="rank-list"><li>載入中...</li></ul>
     </div>
 
-    <!-- 勝利登錄表單 -->
     <div id="win-modal">
         <div class="modal-content">
             <h3>🎉 挑戰成功！ 🎉</h3>
@@ -119,7 +89,6 @@
     </div>
 
 <script>
-    // ⚠️ 替換為你的 Google Apps Script 網頁應用程式網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwFOzYI0NGz7rbAg6TJV808i2zruI8lly-i5jCh3YZIrJiqRIY3vyDOAxreIs2TRpcP/exec"; 
     
     const boardEl = document.getElementById('board');
@@ -128,10 +97,9 @@
     const blackCountEl = document.getElementById('black-count');
     const whiteCountEl = document.getElementById('white-count');
     const restartBtn = document.getElementById('restart-btn');
-    
-    // 計時器相關變數
     const timerContainer = document.getElementById('timer-container');
     const timerText = document.getElementById('timer-text');
+
     let moveTimer = null;
     const TIME_LIMIT = 30;
     let timeLeft = TIME_LIMIT;
@@ -142,18 +110,14 @@
     let finalPlayerScore = 0; 
     let isGameOver = false; 
 
-    // ---------------------------------------------------------
-    // 0. 計時器邏輯
-    // ---------------------------------------------------------
+    // ----------------計時器邏輯----------------
     function startPlayerTimer() {
         clearInterval(moveTimer);
         timeLeft = TIME_LIMIT;
         updateTimerUI();
-        
         moveTimer = setInterval(() => {
             timeLeft--;
             updateTimerUI();
-            
             if (timeLeft <= 0) {
                 clearInterval(moveTimer);
                 handleTimeout();
@@ -169,24 +133,18 @@
 
     function updateTimerUI() {
         timerText.innerText = timeLeft;
-        if (timeLeft <= 5 && timeLeft > 0) {
-            timerContainer.classList.add('timer-warning');
-        } else {
-            timerContainer.classList.remove('timer-warning');
-        }
+        if (timeLeft <= 5 && timeLeft > 0) timerContainer.classList.add('timer-warning');
+        else timerContainer.classList.remove('timer-warning');
     }
 
     function handleTimeout() {
         isGameOver = true;
-        currentPlayer = 0; 
-        statusEl.innerText = "⏳ 時間到！你思考太久了，挑戰失敗 💻";
+        statusEl.innerText = "⏳ 時間到！思考太久，挑戰失敗 💻";
         restartBtn.style.display = 'block';
         render(); 
     }
 
-    // ---------------------------------------------------------
-    // 1. 背景執行緒 (Web Worker - 處理 AI 思考)
-    // ---------------------------------------------------------
+    // ----------------AI Worker----------------
     const workerCode = `
         const weights = [
             [ 99, -20,  10,   5,   5,  10, -20,  99],
@@ -277,77 +235,63 @@
     const aiWorker = new Worker(URL.createObjectURL(blob));
 
     aiWorker.onmessage = function(e) {
-        if(isGameOver) return; 
-        
+        if(isGameOver) return;
         const bestMove = e.data;
         if (bestMove) executeMove(bestMove.r, bestMove.c, 2, getFlips(bestMove.r, bestMove.c, 2));
-        
         loaderEl.style.display = 'none';
         isAiThinking = false;
         currentPlayer = 1;
-        
         if (!checkGameOver()) {
             if (getValidMoves(1).length === 0) {
                 statusEl.innerText = "你無棋可走！由電腦繼續...";
                 currentPlayer = 2;
-                setTimeout(triggerAI, 1000); 
+                setTimeout(triggerAI, 1000);
             } else {
                 statusEl.innerText = "輪到你了：黑棋";
-                render(); 
-                startPlayerTimer(); 
+                render(); startPlayerTimer();
             }
         }
     };
 
-    // ---------------------------------------------------------
-    // 2. 遊戲主邏輯
-    // ---------------------------------------------------------
+    // ----------------主遊戲邏輯----------------
     function initGame() {
         board = Array(8).fill().map(() => Array(8).fill(0));
         board[3][3] = 2; board[3][4] = 1; board[4][3] = 1; board[4][4] = 2;
-        currentPlayer = 1; 
-        isAiThinking = false;
-        isGameOver = false;
+        currentPlayer = 1; isAiThinking = false; isGameOver = false;
         document.getElementById('win-modal').style.display = 'none';
-        restartBtn.style.display = 'none'; 
+        restartBtn.style.display = 'none';
         loaderEl.style.display = 'none';
-        
-        render(); 
-        updateLeaderboard();
+        render(); updateLeaderboard();
         statusEl.innerText = "輪到你了：黑棋";
-        startPlayerTimer(); 
-    }
-
-    function updateScoreDisplay() {
-        let black = 0; let white = 0;
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                if (board[r][c] === 1) black++;
-                else if (board[r][c] === 2) white++;
-            }
-        }
-        blackCountEl.innerText = black;
-        whiteCountEl.innerText = white;
+        startPlayerTimer();
     }
 
     function render() {
         boardEl.innerHTML = '';
         const hints = (isAiThinking || isGameOver) ? [] : getValidMoves(1);
+        let black = 0, white = 0;
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 if (hints.some(m => m.r === r && m.c === c)) cell.classList.add('hint');
-                cell.onclick = () => playerMove(r, c);
+                
+                // 修正：僅能點擊空位且在提示列表中的位置
+                cell.onclick = () => {
+                    if (board[r][c] === 0) playerMove(r, c);
+                };
+
                 if (board[r][c] !== 0) {
                     const piece = document.createElement('div');
                     piece.className = 'piece ' + (board[r][c] === 1 ? 'black' : 'white');
                     cell.appendChild(piece);
+                    if (board[r][c] === 1) black++; else white++;
                 }
                 boardEl.appendChild(cell);
             }
         }
-        updateScoreDisplay();
+        blackCountEl.innerText = black;
+        whiteCountEl.innerText = white;
     }
 
     function getValidMoves(color) {
@@ -373,13 +317,16 @@
 
     function playerMove(r, c) {
         if (currentPlayer !== 1 || isAiThinking || isGameOver) return;
+        // 修正：再次檢查該格是否為空且為合法移動，徹底防止作弊
+        if (board[r][c] !== EMPTY) return; 
+        
         const flips = getFlips(r, c, 1);
         if (flips.length > 0) {
-            stopPlayerTimer(); 
+            stopPlayerTimer();
             executeMove(r, c, 1, flips);
-            if (!checkGameOver()) { 
-                currentPlayer = 2; 
-                triggerAI(); 
+            if (!checkGameOver()) {
+                currentPlayer = 2;
+                triggerAI();
             }
         }
     }
@@ -387,135 +334,82 @@
     function executeMove(r, c, color, flips) {
         board[r][c] = color;
         flips.forEach(([fr, fc]) => board[fr][fc] = color);
-        render(); 
+        render();
     }
 
     function triggerAI() {
         if (getValidMoves(2).length === 0) {
             currentPlayer = 1; statusEl.innerText = "電腦無棋可走！換你下...";
-            render(); 
-            if(!checkGameOver()) {
-                startPlayerTimer(); 
-            }
+            render(); if(!checkGameOver()) startPlayerTimer();
             return;
         }
         isAiThinking = true;
         statusEl.innerText = "AI 瘋狂計算中...";
         loaderEl.style.display = 'block';
-        render(); 
+        render();
         aiWorker.postMessage({ board: board, depth: 6 });
     }
 
     function checkGameOver() {
         if (getValidMoves(1).length === 0 && getValidMoves(2).length === 0) {
-            stopPlayerTimer(); 
+            stopPlayerTimer();
             isGameOver = true;
-            
             let black = parseInt(blackCountEl.innerText);
             let white = parseInt(whiteCountEl.innerText);
-            
             if (black > white) {
-                statusEl.innerText = `恭喜你贏了！🎉 (黑:${black} 白:${white})`;
+                statusEl.innerText = `恭喜獲勝！🎉 (${black}:${white})`;
                 finalPlayerScore = black;
-                setTimeout(showWinModal, 1000); 
+                setTimeout(showWinModal, 1000);
             } else if (black < white) {
-                statusEl.innerText = `電腦無情輾壓！💻 (黑:${black} 白:${white})`;
-                setTimeout(() => restartBtn.style.display = 'block', 500); 
+                statusEl.innerText = `電腦獲勝！💻 (${black}:${white})`;
+                setTimeout(() => restartBtn.style.display = 'block', 500);
             } else {
-                statusEl.innerText = `平分秋色！🤝 (黑:${black} 白:${white})`;
-                setTimeout(() => restartBtn.style.display = 'block', 500); 
+                statusEl.innerText = `平手！🤝 (${black}:${white})`;
+                setTimeout(() => restartBtn.style.display = 'block', 500);
             }
             return true;
         }
         return false;
     }
 
-    // ---------------------------------------------------------
-    // 3. 姓名遮蔽處理與資料庫 (GAS) 串接
-    // ---------------------------------------------------------
-    function showWinModal() {
-        document.getElementById('win-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('win-modal').style.display = 'none';
-        restartBtn.style.display = 'block'; 
-    }
-
+    // ----------------榜單邏輯----------------
+    function showWinModal() { document.getElementById('win-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('win-modal').style.display = 'none'; restartBtn.style.display = 'block'; }
     function maskName(name) {
         if (name.length <= 1) return name;
-        if (name.length === 2) return name[0] + 'o'; 
-        
-        const first = name.substring(0, 1);
-        const last = name.substring(name.length - 1);
-        const middleLength = name.length - 2;
-        let middle = "";
-        for(let i=0; i < middleLength; i++) { middle += "o"; }
-        
-        return first + middle + last; 
+        if (name.length === 2) return name[0] + 'o';
+        return name[0] + "o".repeat(name.length-2) + name[name.length-1];
     }
 
     async function submitWinData() {
-        if(GAS_URL === "YOUR_GAS_URL") {
-            alert("請先將程式碼中的 GAS_URL 替換為你的 Google Apps Script 網址！");
-            return;
-        }
-
         const classVal = document.getElementById('class-input').value.trim();
         const nameVal = document.getElementById('name-input').value.trim();
-
-        if (!classVal || !nameVal) {
-            alert("班級與姓名不能為空！");
-            return;
-        }
-
-        const safeName = maskName(nameVal);
-        const displayName = `${classVal} ${safeName}`; 
-
+        if (!classVal || !nameVal) { alert("班級與姓名不能為空！"); return; }
+        const displayName = `${classVal} ${maskName(nameVal)}`;
         document.getElementById('win-modal').style.display = 'none';
-        statusEl.innerText = "正在上傳戰績至雲端...";
+        statusEl.innerText = "正在上傳戰績...";
         loaderEl.style.display = 'block';
-
         try {
-            // 使用 fetch 將資料 POST 到你的 GAS API
-            await fetch(GAS_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ name: displayName, score: finalPlayerScore }) 
-            });
-            statusEl.innerText = "戰績上傳成功！";
+            await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ name: displayName, score: finalPlayerScore }) });
+            statusEl.innerText = "上傳成功！";
             updateLeaderboard();
-        } catch (e) { 
-            console.error(e);
-            alert("連線失敗，請檢查 GAS 網址設定。"); 
-            statusEl.innerText = "戰績上傳失敗";
-        } finally {
-            loaderEl.style.display = 'none';
-            restartBtn.style.display = 'block'; 
-        }
+        } catch (e) { alert("上傳失敗"); statusEl.innerText = "上傳失敗"; }
+        finally { loaderEl.style.display = 'none'; restartBtn.style.display = 'block'; }
     }
 
     async function updateLeaderboard() {
-        if(GAS_URL === "YOUR_GAS_URL") return;
-
         const listEl = document.getElementById('rank-list');
         try {
-            // 使用 fetch 從你的 GAS API 取得 GET 資料
             const res = await fetch(GAS_URL);
             const data = await res.json();
-            if (!data || data.length === 0) throw new Error("Empty");
-            
+            if (!data || data.length === 0) throw new Error();
             listEl.innerHTML = data.map((row, index) => `
                 <li>
-                    <div>
-                        <strong>#${index + 1} ${row[0]}</strong>
-                        <div class="score-date">${new Date(row[2]).toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'numeric', minute:'numeric'})}</div>
-                    </div>
-                    <span class="score-val">${row[1]} 分</span>
+                    <div><strong>#${index + 1} ${row[0]}</strong><div style="font-size:0.8rem;color:#95a5a6;">${new Date(row[2]).toLocaleDateString()}</div></div>
+                    <span style="font-weight:bold;color:#2ecc71;">${row[1]} 分</span>
                 </li>
             `).join('');
-        } catch(e) { 
-            listEl.innerHTML = "<li>等待第一位戰勝電腦的勇者誕生...</li>"; 
-        }
+        } catch(e) { listEl.innerHTML = "<li>等待勇者誕生...</li>"; }
     }
 
     initGame();
