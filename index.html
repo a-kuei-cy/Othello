@@ -24,7 +24,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #board { display: grid; grid-template-columns: repeat(8, min(10vw, 45px)); grid-template-rows: repeat(8, min(10vw, 45px)); gap: 3px; background: #0b3a16; padding: 6px; border: 6px solid #333; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        .cell { background: var(--board-color); display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; }
+        .cell { background: var(--board-color); display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; width: 100%; height: 100%; }
         .cell:hover { background: #2ecc71; }
         .cell.hint::after { content: ''; width: 25%; height: 25%; background: rgba(255,255,255,0.3); border-radius: 50%; }
 
@@ -274,12 +274,13 @@
             for (let c = 0; c < 8; c++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                if (hints.some(m => m.r === r && m.c === c)) cell.classList.add('hint');
                 
-                // 修正：僅能點擊空位且在提示列表中的位置
-                cell.onclick = () => {
-                    if (board[r][c] === 0) playerMove(r, c);
-                };
+                // 視覺提示
+                const isHint = hints.some(m => m.r === r && m.c === c);
+                if (isHint) cell.classList.add('hint');
+                
+                // 點擊事件
+                cell.onclick = () => playerMove(r, c);
 
                 if (board[r][c] !== 0) {
                     const piece = document.createElement('div');
@@ -298,6 +299,7 @@
         let moves = [];
         for(let r=0; r<8; r++) {
             for(let c=0; c<8; c++) {
+                // 合法移動必須：該格為空，且至少能翻轉一顆敵方棋子
                 if(board[r][c] === 0 && getFlips(r, c, color).length > 0) moves.push({r, c});
             }
         }
@@ -316,11 +318,15 @@
     }
 
     function playerMove(r, c) {
+        // 核心修正 1：如果不是玩家回合、AI 正在思考或遊戲已結束，不予理會
         if (currentPlayer !== 1 || isAiThinking || isGameOver) return;
-        // 修正：再次檢查該格是否為空且為合法移動，徹底防止作弊
-        if (board[r][c] !== EMPTY) return; 
+        
+        // 核心修正 2：如果點擊的格子已經有棋子，絕對不予理會
+        if (board[r][c] !== 0) return;
         
         const flips = getFlips(r, c, 1);
+        
+        // 核心修正 3：必須有可翻轉的棋子才是合法落子
         if (flips.length > 0) {
             stopPlayerTimer();
             executeMove(r, c, 1, flips);
